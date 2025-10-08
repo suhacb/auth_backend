@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AuthRequest;
 use Illuminate\Http\Request;
+use App\Http\Requests\AuthRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
@@ -12,16 +13,31 @@ class AuthController extends Controller
     {
         $username = $request->input('username');
         $password = $request->input('password');
-        $url = 'host.docker.internal:7080/realms/nutrients/protocol/openid-connect/token';
+        $url = config('app.keycloak.base_url') . '/realms/' . config('app.keycloak.realm') . '/protocol/openid-connect/token';
+        
+        // Get token from keycloak
         $response = Http::asForm()->post($url, [
-            'grant_type' => 'password',
-            'client_id' => 'nutrients-client',
-            'client_secret' => 'PkPLAW1E7x7eQmJMAWa2igKj8RUNlvFy',
+            'grant_type' => config('app.keycloak.grant_type'),
+            'client_id' => config('app.keycloak.client_id'),
+            'client_secret' => config('app.keycloak.client_secret'),
             'username' => $username,
             'password' => $password,
-            'scope' => 'openid'
+            'scope' => config('app.keycloak.scope')
         ]);
 
+        if ($response->failed()) {
+            return response()->json($response->json(), $response->status());
+        }
+
+        // Keycloak may return 200 even if the credentials are wrong
+        if (array_key_exists('error', $response->json())) {
+            return response()->json([
+                'error' => $response->json('error'),
+                'error_description' => $response->json('error_description')
+            ], 401);
+        }
+
+        // Return the token response from Keycloak
         return $response->json();
     }
 }
