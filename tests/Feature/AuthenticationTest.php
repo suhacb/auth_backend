@@ -99,8 +99,8 @@ class AuthenticationTest extends TestCase
         ]);
 
         // Test login using incorrect client_id
-        $original = config('app.keycloak.client_id');
-        Config::set('app.keycloak.client_id', 'wrong_client_id');
+        $original = config('keycloak.client_id');
+        Config::set('keycloak.client_id', 'wrong_client_id');
         $response = $this->postJson(route('login'), [
             'username' => 'test',
             'password' => '!2ndArmored'
@@ -110,11 +110,11 @@ class AuthenticationTest extends TestCase
             'error',
             'error_description'
         ]);
-        Config::set('app.keycloak.client_id', $original);
+        Config::set('keycloak.client_id', $original);
 
         // Test login using incorrect client_secret
-        $original = config('app.keycloak.client_secret');
-        Config::set('app.keycloak.client_id', 'wrong_client_secret');
+        $original = config('keycloak.client_secret');
+        Config::set('keycloak.client_id', 'wrong_client_secret');
         $response = $this->postJson(route('login'), [
             'username' => 'test',
             'password' => '!2ndArmored'
@@ -123,11 +123,11 @@ class AuthenticationTest extends TestCase
             'error',
             'error_description'
         ]);
-        Config::set('app.keycloak.client_secret', $original);
+        Config::set('keycloak.client_secret', $original);
 
         // Test login using incorrect grant_type
-        $original = config('app.keycloak.client_secret');
-        Config::set('app.keycloak.client_id', 'wrong_client_secret');
+        $original = config('keycloak.client_secret');
+        Config::set('keycloak.client_id', 'wrong_client_secret');
         $response = $this->postJson(route('login'), [
             'username' => 'test',
             'password' => '!2ndArmored'
@@ -137,17 +137,17 @@ class AuthenticationTest extends TestCase
             'error_description'
         ]);
 
-        Config::set('app.keycloak.client_secret', $original);
+        Config::set('keycloak.client_secret', $original);
 
         // Clean up keycloak sessions for the user
-        $user = Http::withToken($access_token)->get(config('app.keycloak.base_url') . '//realms/' . config('app.keycloak.realm') . '/protocol/openid-connect/userinfo')->json();
+        $user = Http::withToken($access_token)->get(config('keycloak.base_url') . '//realms/' . config('keycloak.realm') . '/protocol/openid-connect/userinfo')->json();
         $user_id = $user['sub'];
-        $response = Http::asForm()->post(config('app.keycloak.base_url') . '/realms/master/protocol/openid-connect/token', [
+        $response = Http::asForm()->post(config('keycloak.base_url') . '/realms/master/protocol/openid-connect/token', [
             'grant_type' => 'password',
             'client_id' => 'admin-cli',
             'username' => 'admin',
             'password' => 'admin',
         ]);
-        $response = Http::withToken($response->json('access_token'))->post(config('app.keycloak.base_url') . "/admin/realms/" . config('app.keycloak.realm') . "/users/{$user_id}/logout");
+        $response = Http::withToken($response->json('access_token'))->post(config('keycloak.base_url') . "/admin/realms/" . config('keycloak.realm') . "/users/{$user_id}/logout");
     }
 }

@@ -13,16 +13,16 @@ class AuthController extends Controller
     {
         $username = $request->input('username');
         $password = $request->input('password');
-        $url = config('app.keycloak.base_url') . '/realms/' . config('app.keycloak.realm') . '/protocol/openid-connect/token';
+        $url = config('keycloak.base_url') . '/realms/' . config('keycloak.realm') . '/protocol/openid-connect/token';
         
         // Get token from keycloak
         $response = Http::asForm()->post($url, [
-            'grant_type' => config('app.keycloak.grant_type'),
-            'client_id' => config('app.keycloak.client_id'),
-            'client_secret' => config('app.keycloak.client_secret'),
+            'grant_type' => config('keycloak.grant_type'),
+            'client_id' => config('keycloak.client_id'),
+            'client_secret' => config('keycloak.client_secret'),
             'username' => $username,
             'password' => $password,
-            'scope' => config('app.keycloak.scope')
+            'scope' => config('keycloak.scope')
         ]);
 
         if ($response->failed()) {
