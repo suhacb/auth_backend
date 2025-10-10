@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Requests\AuthRequest;
+use App\Contracts\Auth\TokenBroker;
+use Illuminate\Support\Facades\Http;
+use App\Exceptions\Auth\IdentityProviderException;
+use App\Exceptions\Auth\InvalidCredentialsException;
+
+class AuthController extends Controller
+{
+    public function __construct(private readonly TokenBroker $broker) {}
+    
+    public function login(AuthRequest $request): JsonResponse
+    {
+        $username = $request->input('username');
+        $password = $request->input('password');
+
+        try {
+            $token = $this->broker->requestToken($username, $password);
+            return response()->json($token->toArray(), 200);
+        } catch (InvalidCredentialsException $e) {
+            return response()->json([
+                'error' => 'invalid_credentials',
+                'error_description' => $e->getMessage(),
+            ], 401);
+        } catch (IdentityProviderException $e) {
+            // Optionally log $e->payload but NEVER the password
+            return response()->json([
+                'error' => 'idp_unavailable',
+                'error_description' => 'Authentication service temporarily unavailable.',
+            ], $e->status >= 400 && $e->status < 600 ? $e->status : 503);
+        }
+    }
+}

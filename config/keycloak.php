@@ -18,4 +18,11 @@ return [
     'client_secret' => env('KEYCLOAK_CLIENT_SECRET', 'mysecret'),
     'scope' => env('KEYCLOAK_SCOPE', 'openid'),
     'redirect_uri' => env('KEYCLOAK_REDIRECT_URI', 'http://localhost/callback'),
+    
+    // HTTP client hardening
+    'timeout'       => env('KEYCLOAK_TIMEOUT', 5), // seconds
+    'retry'         => [
+        'times' => (int) env('KEYCLOAK_HTTP_RETRY_TIMES', 1),
+        'sleep' => (int) env('KEYCLOAK_HTTP_RETRY_SLEEP', 100), // ms
+    ],
 ];

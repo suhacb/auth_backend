@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
-use Illuminate\Support\Facades\Log;
+use App\Contracts\Auth\TokenBroker;
 use Illuminate\Support\Facades\Http;
+use App\Exceptions\Auth\IdentityProviderException;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly TokenBroker $broker) {}
+    
     public function login(AuthRequest $request)
     {
         $username = $request->input('username');
@@ -39,5 +43,19 @@ class AuthController extends Controller
 
         // Return the token response from Keycloak
         return $response->json();
+    }
+
+    public function refresh(): JsonResponse
+    {
+        request()->validate(['refresh_token' => 'required|string']);
+        try {
+            $token = $this->broker->refreshToken(request('refresh_token'));
+            return response()->json($token->toArray(), 200);
+        } catch (IdentityProviderException $e) {
+            return response()->json([
+                'error' => 'refresh_failed',
+                'error_description' => 'Unable to refresh token.',
+            ], 400);
+        }
     }
 }
