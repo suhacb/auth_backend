@@ -2,11 +2,12 @@
 
 namespace App\Services\Auth;
 
-use App\Contracts\Auth\TokenBroker;
 use App\Classes\Auth\AccessToken;
+use App\Contracts\Auth\TokenBroker;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use App\Exceptions\Auth\IdentityProviderException;
 use App\Exceptions\Auth\InvalidCredentialsException;
-use Illuminate\Support\Facades\Http;
 
 class KeycloakTokenBroker implements TokenBroker
 {
@@ -44,22 +45,28 @@ class KeycloakTokenBroker implements TokenBroker
             $payload['scope'] = $this->config['scope'];
         }
 
-        $resp = $this->client()->post($this->endpoint('token'), $payload);
+        $response = $this->client()->post($this->endpoint('token'), $payload);
+        
+        Log::info($response->status());
 
         // Handle most common invalid creds signaling
-        if ($resp->status() === 400 && in_array($resp->json('error'), ['invalid_grant', 'invalid_request'], true)) {
-            throw new InvalidCredentialsException($resp->json('error_description') ?? 'Invalid credentials.');
+        if ($response->status() === 400 && in_array($response->json('error'), ['invalid_grant', 'invalid_request'], true)) {
+            throw new InvalidCredentialsException($response->json('error_description') ?? 'Invalid credentials.');
         }
 
-        if ($resp->failed()) {
+        if ($response->status() === 401 && in_array($response->json('error'), ['invalid_grant', 'invalid_request'], true)) {
+            throw new InvalidCredentialsException($response->json('error_description') ?? 'Invalid credentials.');
+        }
+
+        if ($response->failed()) {
             throw new IdentityProviderException(
-                "Keycloak token endpoint failed with status {$resp->status()}.",
-                status: $resp->status(),
-                payload: $resp->json()
+                "Keycloak token endpoint failed with status {$response->status()}.",
+                status: $response->status(),
+                payload: $response->json()
             );
         }
 
-        $data = $resp->json();
+        $data = $response->json();
 
         // Keycloak sometimes returns 200 with an error body
         if (is_array($data) && array_key_exists('error', $data)) {
@@ -85,17 +92,17 @@ class KeycloakTokenBroker implements TokenBroker
             'refresh_token' => $refreshToken,
         ];
 
-        $resp = $this->client()->post($this->endpoint('token'), $payload);
+        $response = $this->client()->post($this->endpoint('token'), $payload);
 
-        if ($resp->failed()) {
+        if ($response->failed()) {
             throw new IdentityProviderException(
-                "Keycloak refresh failed with status {$resp->status()}.",
-                status: $resp->status(),
-                payload: $resp->json()
+                "Keycloak refresh failed with status {$response->status()}.",
+                status: $response->status(),
+                payload: $response->json()
             );
         }
 
-        $data = $resp->json();
+        $data = $response->json();
         if (isset($data['error'])) {
             throw new IdentityProviderException($data['error_description'] ?? $data['error'], 502, $data);
         }

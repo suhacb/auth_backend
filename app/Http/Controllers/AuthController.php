@@ -7,7 +7,9 @@ use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
 use App\Contracts\Auth\TokenBroker;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
 use App\Exceptions\Auth\IdentityProviderException;
+use App\Exceptions\Auth\InvalidCredentialsException;
 
 class AuthController extends Controller
 {
@@ -18,31 +20,27 @@ class AuthController extends Controller
         $username = $request->input('username');
         $password = $request->input('password');
         $url = config('keycloak.base_url') . '/realms/' . config('keycloak.realm') . '/protocol/openid-connect/token';
-        
-        // Get token from keycloak
-        $response = Http::asForm()->post($url, [
-            'grant_type' => config('keycloak.grant_type'),
-            'client_id' => config('keycloak.client_id'),
-            'client_secret' => config('keycloak.client_secret'),
-            'username' => $username,
-            'password' => $password,
-            'scope' => config('keycloak.scope')
-        ]);
 
-        if ($response->failed()) {
-            return response()->json($response->json(), $response->status());
-        }
-
-        // Keycloak may return 200 even if the credentials are wrong
-        if (array_key_exists('error', $response->json())) {
+        try{
+            $response = $this->broker->requestToken($username, $password);
+        } catch (InvalidCredentialsException $e) {
+            return response()->json(
+                [
+                    'errors' => [
+                        'username' => $e->getMessage(),
+                        'password' => $e->getMessage(),
+                    ]
+                ], $e->status);
+        } catch (IdentityProviderException $e) {
             return response()->json([
-                'error' => $response->json('error'),
-                'error_description' => $response->json('error_description')
-            ], 401);
+              'error_message' => $e->getMessage()  
+            ], 500);
+        } catch (ConnectionException $e) {
+            // Service unreachable
+            return response()->json([
+                'error_message' => 'Authentication service is unreachable. Please try again later.',
+            ], 500);
         }
-
-        // Return the token response from Keycloak
-        return $response->json();
     }
 
     public function refresh(): JsonResponse
