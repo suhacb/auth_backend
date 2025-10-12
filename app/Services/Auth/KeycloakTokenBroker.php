@@ -46,8 +46,6 @@ class KeycloakTokenBroker implements TokenBroker
         }
 
         $response = $this->client()->post($this->endpoint('token'), $payload);
-        
-        Log::info($response->status());
 
         // Handle most common invalid creds signaling
         if ($response->status() === 400 && in_array($response->json('error'), ['invalid_grant', 'invalid_request'], true)) {
