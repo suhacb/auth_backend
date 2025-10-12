@@ -28,20 +28,17 @@ class LoginTokenTest extends TestCase
 
     public function test_set_issued_at(): void
     {
-        $loginToken = new LoginToken();
-
         // Test that issued_at is now
         $now = Carbon::now();
-        $loginToken->setIssuedAtAndValidUntil();
+        $loginToken = LoginToken::create(['app' => 'nutrients']);
         $this->assertArrayHasKey('issued_at', $loginToken->getAttributes());
         $this->assertArrayHasKey('valid_until', $loginToken->getAttributes());
         $this->assertInstanceOf(Carbon::class, $loginToken->issued_at);
         $this->assertTrue($now->diffInSeconds($loginToken->issued_at)<1);
         $this->assertEquals($loginToken->issued_at->diffInMinutes($loginToken->valid_until), 5);
 
-        $loginToken = new LoginToken();
         $now = Carbon::now();
-        $loginToken->setIssuedAtAndValidUntil($now);
+        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
         $this->assertTrue($loginToken->issued_at->diffInSeconds($now) < 2);
         $this->assertEquals($loginToken->issued_at->diffInMinutes($loginToken->valid_until), 5);
     }
@@ -50,8 +47,7 @@ class LoginTokenTest extends TestCase
     {
         // Test that login token is created correctly
         $now = Carbon::now();
-        $loginToken = new LoginToken(['app' => 'nutrients']);
-        $loginToken->setIssuedAtAndValidUntil($now);
+        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
         $loginToken->save();
         $loginToken = LoginToken::where(['login_token' => $loginToken->login_token])->first();
         $this->assertEquals('nutrients', $loginToken->app);
@@ -67,7 +63,7 @@ class LoginTokenTest extends TestCase
         $now = Carbon::now();
         $valid_time = $now->copy()->addMinutes(1);
         $invalid_time = $now->copy()->addMinutes(5)->addSeconds(1);
-        $loginToken = new LoginToken(['app' => 'nutrients']);
+        $loginToken = LoginToken::create(['app' => 'nutrients']);
         $this->assertTrue($loginToken->isValid($valid_time));
         $this->assertFalse($loginToken->isValid($invalid_time));
     }
