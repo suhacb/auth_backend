@@ -126,8 +126,16 @@ class LoginTokenTest extends TestCase
 
     public function test_login_token_is_used_method(): void
     {
+        $now = Carbon::now();
+        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
+
         // Test that the isUsed() method returns true on a used token
+        $this->assertFalse($loginToken->isUsed($loginToken->id));
+        $this->assertFalse($loginToken->isUsed($loginToken->login_token));
 
         // Test that the isUsed() method returns false on an unused and valid token
+        $loginToken->use();
+        $this->assertTrue($loginToken->isUsed($loginToken->id));
+        $this->assertTrue($loginToken->isUsed($loginToken->login_token));
     }
 }

@@ -65,4 +65,19 @@ class LoginToken extends Model
         $this->delete();
         return $this->isValid() ? true : false;
     }
+
+    public static function isUsed(int|string $token): bool
+    {
+        $query = self::withTrashed();
+
+        if (is_int($token)) {
+            $query->where('id', $token);
+        } else {
+            $query->where('login_token', $token);
+        }
+
+        $model = $query->first();
+
+        return $model?->trashed() ?? false;
+    }
 }
