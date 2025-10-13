@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\LoginToken;
 use Tests\TestCase;
+use App\Models\LoginToken;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Log;
 
 class LoginTokenTest extends TestCase
 {
@@ -18,12 +20,47 @@ class LoginTokenTest extends TestCase
     public function test_login_token_migration(): void
     {
         // Test that login_tokens table exists
+        $this->assertTrue(Schema::hasTable('login_tokens'), 'The login_tokens table does not exist in the database.');
 
         // Test that login_tokens table has all the fields
+        $expectedColumns = [
+            'id' => 'integer',
+            'app' => 'string',
+            'login_token' => 'string',
+            'issued_at' => 'datetime',
+            'valid_until' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
+        ];
+
+        $this->assertTrue(
+            Schema::hasColumns('login_tokens', array_keys($expectedColumns)),
+            'The users table does not have the expected columns: ' . implode(', ', array_keys($expectedColumns))
+        );
         
         // Test that login_tokens table fields are of correct type
+        $migrationPath = database_path('migrations/2025_10_11_150839_create_login_tokens_table.php');
+        $migrationContent = file_get_contents($migrationPath);
+        $this->assertStringContainsString('$table->id()', $migrationContent, 'Migration should create primary key id.');
+        $this->assertStringContainsString("string('app')", $migrationContent, 'Migration should create string app.');
+        $this->assertStringContainsString("string('login_token')", $migrationContent, 'Migration should create string login_token.');
+        $this->assertStringContainsString("datetime('issued_at')", $migrationContent, 'Migration should create datetime issued_at.');
+        $this->assertStringContainsString("datetime('valid_until')", $migrationContent, 'Migration should create datetime valid_until.');
 
         // Test for unique fields
+        $lines = explode("\n", $migrationContent);
+        $search = "string('login_token')";
+        $foundLine = null;
+
+        foreach ($lines as $line) {
+            if (strpos($line, $search) !== false) {
+                $foundLine = $line;
+                break; // stop at first match
+            }
+        }
+
+        $this->assertStringContainsString('unique()', $foundLine, 'Migration should make login_token unique.');
     }
 
     public function test_set_issued_at(): void
