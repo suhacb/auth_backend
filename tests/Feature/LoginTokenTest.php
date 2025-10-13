@@ -119,8 +119,6 @@ class LoginTokenTest extends TestCase
         // Test that the use method soft deletes the token
         $now = Carbon::now()->subMinutes(10);
         $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
-        Log::info('now:' . Carbon::now());
-        Log::info($loginToken);
         $token_is_used = $loginToken->use();
         $this->assertFalse($token_is_used);
         $this->assertEmpty(LoginToken::where(['id' => $loginToken->id])->get());
