@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use App\Models\LoginToken;
+use App\Classes\Auth\LoginToken;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -67,31 +67,22 @@ class LoginTokenTest extends TestCase
     {
         // Test that issued_at is now
         $now = Carbon::now();
-        $loginToken = LoginToken::create(['app' => 'nutrients']);
-        $this->assertArrayHasKey('issued_at', $loginToken->getAttributes());
-        $this->assertArrayHasKey('valid_until', $loginToken->getAttributes());
-        $this->assertInstanceOf(Carbon::class, $loginToken->issued_at);
-        $this->assertTrue($now->diffInSeconds($loginToken->issued_at)<1);
-        $this->assertEquals($loginToken->issued_at->diffInMinutes($loginToken->valid_until), 5);
+        $loginToken = new LoginToken(
+            app: 'nutrients'
+        );
+        $this->assertArrayHasKey('issued_at', $loginToken->token->getAttributes());
+        $this->assertArrayHasKey('valid_until', $loginToken->token->getAttributes());
+        $this->assertInstanceOf(Carbon::class, $loginToken->token->issued_at);
+        $this->assertTrue($now->diffInSeconds($loginToken->token->issued_at)<1);
+        $this->assertEquals($loginToken->token->issued_at->diffInMinutes($loginToken->token->valid_until), 5);
 
         $now = Carbon::now();
-        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
-        $this->assertTrue($loginToken->issued_at->diffInSeconds($now) < 2);
-        $this->assertEquals($loginToken->issued_at->diffInMinutes($loginToken->valid_until), 5);
-    }
-
-    public function test_login_token_create_method(): void
-    {
-        // Test that login token is created correctly
-        $now = Carbon::now();
-        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
-        $loginToken->save();
-        $loginToken = LoginToken::where(['login_token' => $loginToken->login_token])->first();
-        $this->assertEquals('nutrients', $loginToken->app);
-        $this->assertInstanceOf(Carbon::class, $loginToken->issued_at);
-        $this->assertInstanceOf(Carbon::class, $loginToken->valid_until);
-        $this->assertTrue($loginToken->issued_at->diffInSeconds($now) < 2);
-        $this->assertEquals($loginToken->issued_at->diffInMinutes($loginToken->valid_until), 5);
+        $loginToken = new LoginToken(
+            app: 'nutrients',
+            time: $now
+        );
+        $this->assertTrue($loginToken->token->issued_at->diffInSeconds($now) < 2);
+        $this->assertEquals($loginToken->token->issued_at->diffInMinutes($loginToken->token->valid_until), 5);
     }
 
     public function test_login_token_is_valid_method(): void
@@ -100,7 +91,9 @@ class LoginTokenTest extends TestCase
         $now = Carbon::now();
         $valid_time = $now->copy()->addMinutes(1);
         $invalid_time = $now->copy()->addMinutes(5)->addSeconds(1);
-        $loginToken = LoginToken::create(['app' => 'nutrients']);
+        $loginToken = new LoginToken(
+            app: 'nutrients'
+        );
         $this->assertTrue($loginToken->isValid($valid_time));
         $this->assertFalse($loginToken->isValid($invalid_time));
     }
@@ -109,33 +102,42 @@ class LoginTokenTest extends TestCase
     {
         // Test that the use method soft deletes the valid token and returns true
         $now = Carbon::now();
-        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
+        $loginToken = new LoginToken(
+            app: 'nutrients',
+            time: $now
+        );
         $token_is_used = $loginToken->use();
         $this->assertTrue($token_is_used);
         $this->assertSoftDeleted('login_tokens', [
-            'id' => $loginToken->id,
+            'id' => $loginToken->token->id,
         ]);
 
         // Test that the use method soft deletes the token
-        $now = Carbon::now()->subMinutes(10);
-        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
+        $past_time = Carbon::now()->subMinutes(10);
+        $loginToken = new LoginToken(
+            app: 'nutrients',
+            time: $past_time
+        );
         $token_is_used = $loginToken->use();
         $this->assertFalse($token_is_used);
-        $this->assertEmpty(LoginToken::where(['id' => $loginToken->id])->get());
+        $this->assertEmpty(\App\Models\LoginToken::where(['id' => $loginToken->token->id])->get());
     }
 
     public function test_login_token_is_used_method(): void
     {
         $now = Carbon::now();
-        $loginToken = LoginToken::create(['app' => 'nutrients', 'issued_at' => $now]);
+        $loginToken = new LoginToken(
+            app: 'nutrients',
+            time: $now
+        );
 
         // Test that the isUsed() method returns true on a used token
-        $this->assertFalse($loginToken->isUsed($loginToken->id));
-        $this->assertFalse($loginToken->isUsed($loginToken->login_token));
+        $this->assertFalse($loginToken->isUsed($loginToken->token->id));
+        $this->assertFalse($loginToken->isUsed($loginToken->token->login_token));
 
         // Test that the isUsed() method returns false on an unused and valid token
         $loginToken->use();
-        $this->assertTrue($loginToken->isUsed($loginToken->id));
-        $this->assertTrue($loginToken->isUsed($loginToken->login_token));
+        $this->assertTrue($loginToken->isUsed($loginToken->token->id));
+        $this->assertTrue($loginToken->isUsed($loginToken->token->login_token));
     }
 }

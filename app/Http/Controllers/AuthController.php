@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LoginToken;
 use Illuminate\Http\Request;
+use App\Classes\Auth\LoginToken;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
 use App\Contracts\Auth\TokenBroker;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\ConnectionException;
 use App\Exceptions\Auth\IdentityProviderException;
-use App\Exceptions\Auth\InvalidClientCredentialsException;
 use App\Exceptions\Auth\InvalidUserCredentialsException;
+use App\Exceptions\Auth\InvalidClientCredentialsException;
 
 class AuthController extends Controller
 {
@@ -70,7 +71,11 @@ class AuthController extends Controller
      * will then pass it along with user credentials.
      */
     public function loginToken (AuthRequest $request) {
-        $login_token = LoginToken::create(['app' => $request->json('app')]);
-        return response()->json($login_token, 200);
+        $loginToken = new LoginToken(
+            app: $request->json('app')
+        );
+        // Log::info($loginToken->loginToken->toJson());
+        // $loginToken->loginToken->save();
+        return response()->json($loginToken->token, 200);
     }
 }

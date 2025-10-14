@@ -45,16 +45,12 @@ class KeycloakTokenBroker implements TokenBroker
             'scope'         => 'openid profile email'
         ];
 
-        Log::info($payload);
-
         $response = $this->client()->post($this->endpoint('token'), $payload);
-
 
         // Wrong grant_type
         if ($response->status() === 400 && in_array($response->json('error'), ['unsupported_grant_type'], true)) {
             throw new InvalidClientCredentialsException($response->json('error_description') ?? 'unsupported_grant_type.');
         }
-
 
         // Wrong client_id or client_secret
         if ($response->status() === 401 && in_array($response->json('error'), ['invalid_client', 'unauthorized_client'], true)) {

@@ -91,7 +91,6 @@ class AuthenticationTest extends TestCase
             'username' => Arr::get($this->config, 'test_user.username'),
             'password' => Arr::get($this->config, 'test_user.password')
         ]);
-        Log::info($response->json());
         $response->assertStatus(200, 'Expected HTTP 200 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
             'access_token',
