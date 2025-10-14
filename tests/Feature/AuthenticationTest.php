@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -13,13 +15,37 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected array $config;
+    protected string $adminToken;
+    protected array $userCredentials;
+    protected ?string $accessToken;
+    protected ?string $idToken;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->config = config('keycloak');
+
+        // $adminResponse = Http::asForm()->post('http://host.docker.internal:7080/realms/master/protocol/openid-connect/token', [
+        //     'grant_type' => 'password',
+        //     'client_id' => $this->config['admin_client_id'],
+        //     'username' => $this->config['admin_username'],
+        //     'password' => $this->config['admin_password'],
+        // ]);
+// 
+        $this->accessToken = null;
+        $this->idToken = null;
+        // $this->adminToken = $adminResponse->json('access_token');
+    }
+
     /**
      * Test AuthController requests validation
      */
     public function test_login_route(): void
     {
-        $username = 'username';
-        $password = 'password';
+        $username = Str::random(12);
+        $password = Str::random(12);
 
         // Test username is required
         $response = $this->postJson(route('auth.login'), [
@@ -38,7 +64,7 @@ class AuthenticationTest extends TestCase
 
         // Test username must be string
         $response = $this->postJson(route('auth.login'), [
-            'username' => 12345,
+            'username' => random_int(10000, 99999),
             'password' => $password
         ]);
 
@@ -48,7 +74,7 @@ class AuthenticationTest extends TestCase
         // Test password must be string
         $response = $this->postJson(route('auth.login'), [
             'username' => $username,
-            'password' => 12345
+            'password' => random_int(10000, 99999)
         ]);
 
         $response->assertStatus(422, 'Expected HTTP 422 for validation error, but received ' . $response->status() . '.');
@@ -62,9 +88,10 @@ class AuthenticationTest extends TestCase
     {
         // Test login using correct credentials
         $response = $this->postJson(route('auth.login'), [
-            'username' => 'test',
-            'password' => '!2ndArmored'
+            'username' => Arr::get($this->config, 'test_user.username'),
+            'password' => Arr::get($this->config, 'test_user.password')
         ]);
+        Log::info($response->json());
         $response->assertStatus(200, 'Expected HTTP 200 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
             'access_token',
@@ -72,14 +99,16 @@ class AuthenticationTest extends TestCase
             'expires_in',
             'refresh_token',
             'refresh_expires_in',
-            'scope'
+            'scope',
+            'id_token'
         ]);
-        $access_token = $response->json('access_token');
+        $this->accessToken = $response->json('access_token');
+        $this->idToken = $response->json('id_token');
 
         // Test login using incorrect username
         $response = $this->postJson(route('auth.login'), [
-            'username' => 'incorrect_username',
-            'password' => '!2ndArmored'
+            'username' => Str::random(12),
+            'password' => Arr::get($this->config, 'test_user.password')
         ]);
         $response->assertStatus(401, 'Expected HTTP 401 for validation error, but received ' . $response->status() . '.');
         $allowed = ['username', 'password'];
@@ -87,63 +116,53 @@ class AuthenticationTest extends TestCase
 
         // Test login using incorrect password
         $response = $this->postJson(route('auth.login'), [
-            'username' => 'test',
-            'password' => 'incorrect_password'
+            'username' => Arr::get($this->config, 'test_user.username'),
+            'password' => Str::random(12)
         ]);
         $response->assertStatus(401, 'Expected HTTP 401 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure(['errors' => $allowed]);
+    }
 
+    public function test_login_using_incorrect_client_id(): void
+    {
         // Test login using incorrect client_id
-        $original = config('keycloak.client_id');
         Config::set('keycloak.client_id', 'wrong_client_id');
         $response = $this->postJson(route('auth.login'), [
-            'username' => 'test',
-            'password' => '!2ndArmored'
+            'username' => Arr::get($this->config, 'test_user.username'),
+            'password' => Arr::get($this->config, 'test_user.password')
         ]);
-        $response->assertStatus(401, 'Expected HTTP 401 for validation error, but received ' . $response->status() . '.');
+        $response->assertStatus(500, 'Expected HTTP 500 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
-            'error',
-            'error_description'
+            'errors',
         ]);
-        Config::set('keycloak.client_id', $original);
+    }
 
-        // Test login using incorrect client_secret
-        $original = config('keycloak.client_secret');
+    // Test login using incorrect client_secret
+    public function test_login_using_incorrect_client_secret(): void
+    {
         Config::set('keycloak.client_id', 'wrong_client_secret');
         $response = $this->postJson(route('auth.login'), [
-            'username' => 'test',
-            'password' => '!2ndArmored'
+            'username' => Arr::get($this->config, 'test_user.username'),
+            'password' => Arr::get($this->config, 'test_user.password')
         ]);
+        $response->assertStatus(500, 'Expected HTTP 500 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
-            'error',
-            'error_description'
+            'errors',
         ]);
-        Config::set('keycloak.client_secret', $original);
+    }
 
-        // Test login using incorrect grant_type
-        $original = config('keycloak.client_secret');
-        Config::set('keycloak.client_id', 'wrong_client_secret');
+    // Test login using incorrect grant_type
+    public function test_login_using_incorrect_grant_type(): void
+    {
+        Config::set('keycloak.grant_type', 'wrong_grant_type');
         $response = $this->postJson(route('auth.login'), [
-            'username' => 'test',
-            'password' => '!2ndArmored'
+            'username' => Arr::get($this->config, 'test_user.username'),
+            'password' => Arr::get($this->config, 'test_user.password')
         ]);
+        $response->assertStatus(500, 'Expected HTTP 500 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
-            'error',
-            'error_description'
+            'errors',
         ]);
-
-        Config::set('keycloak.client_secret', $original);
-
-        // Clean up keycloak sessions for the user
-        $user = Http::withToken($access_token)->get(config('keycloak.base_url') . '//realms/' . config('keycloak.realm') . '/protocol/openid-connect/userinfo')->json();
-        $user_id = $user['sub'];
-        $response = Http::asForm()->post(config('keycloak.base_url') . '/realms/master/protocol/openid-connect/token', [
-            'grant_type' => 'password',
-            'client_id' => 'admin-cli',
-            'username' => 'admin',
-            'password' => 'admin',
-        ]);
-        $response = Http::withToken($response->json('access_token'))->post(config('keycloak.base_url') . "/admin/realms/" . config('keycloak.realm') . "/users/{$user_id}/logout");
     }
 
     /**
@@ -181,5 +200,17 @@ class AuthenticationTest extends TestCase
 
         $diffInMinutes = $issued_at->diffInMinutes($valid_until);
         $this->assertEquals(5, $diffInMinutes, "Token validity duration should be 5 minutes");
+    }
+
+    /** This method is for cleanup Keycloak tokens after all tests are done */
+    // public static function tearDownAfterClass(): void
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        if ($this->idToken) {
+            $response = Http::get(Arr::get($this->config, 'base_url') . '/realms/' . Arr::get($this->config, 'realm') . '/protocol/openid-connect/logout', [
+                'id_token_hint' => $this->idToken
+            ]);
+        }
     }
 }

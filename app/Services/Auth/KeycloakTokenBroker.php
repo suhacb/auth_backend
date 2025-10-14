@@ -7,7 +7,9 @@ use App\Contracts\Auth\TokenBroker;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Exceptions\Auth\IdentityProviderException;
+use App\Exceptions\Auth\InvalidClientCredentialsException;
 use App\Exceptions\Auth\InvalidCredentialsException;
+use App\Exceptions\Auth\InvalidUserCredentialsException;
 
 class KeycloakTokenBroker implements TokenBroker
 {
@@ -39,21 +41,34 @@ class KeycloakTokenBroker implements TokenBroker
             'client_secret' => $this->config['client_secret'],
             'username'      => $username,
             'password'      => $password,
+            // 'scope'         => $this->config['scope']
+            'scope'         => 'openid profile email'
         ];
 
-        if (!empty($this->config['scope'])) {
-            $payload['scope'] = $this->config['scope'];
-        }
+        Log::info($payload);
 
         $response = $this->client()->post($this->endpoint('token'), $payload);
 
-        // Handle most common invalid creds signaling
-        if ($response->status() === 400 && in_array($response->json('error'), ['invalid_grant', 'invalid_request'], true)) {
-            throw new InvalidCredentialsException($response->json('error_description') ?? 'Invalid credentials.');
+
+        // Wrong grant_type
+        if ($response->status() === 400 && in_array($response->json('error'), ['unsupported_grant_type'], true)) {
+            throw new InvalidClientCredentialsException($response->json('error_description') ?? 'unsupported_grant_type.');
         }
 
-        if ($response->status() === 401 && in_array($response->json('error'), ['invalid_grant', 'invalid_request'], true)) {
-            throw new InvalidCredentialsException($response->json('error_description') ?? 'Invalid credentials.');
+
+        // Wrong client_id or client_secret
+        if ($response->status() === 401 && in_array($response->json('error'), ['invalid_client', 'unauthorized_client'], true)) {
+            throw new InvalidClientCredentialsException($response->json('error_description') ?? 'Invalid client or Invalid client credentials.');
+        }
+
+        // Wrong username or password
+        if ($response->status() === 401 && in_array($response->json('error'), ['invalid_grant'], true)) {
+            throw new InvalidUserCredentialsException($response->json('error_description') ?? 'Invalid user credentials.');
+        }
+
+        // Handle most common invalid creds signaling
+        if ($response->status() === 400) {
+            throw new InvalidClientCredentialsException($response->json());
         }
 
         if ($response->failed()) {
@@ -67,16 +82,16 @@ class KeycloakTokenBroker implements TokenBroker
         $data = $response->json();
 
         // Keycloak sometimes returns 200 with an error body
-        if (is_array($data) && array_key_exists('error', $data)) {
-            $error = $data['error'];
-            $desc  = $data['error_description'] ?? $error;
-
-            if ($error === 'invalid_grant') {
-                throw new InvalidCredentialsException($desc);
-            }
-
-            throw new IdentityProviderException($desc, status: 502, payload: $data);
-        }
+        // if (is_array($data) && array_key_exists('error', $data)) {
+        //     $error = $data['error'];
+        //     $desc  = $data['error_description'] ?? $error;
+// 
+        //     if ($error === 'invalid_grant') {
+        //         throw new InvalidCredentialsException($desc);
+        //     }
+// 
+        //     throw new IdentityProviderException($desc, status: 502, payload: $data);
+        // }
 
         return AccessToken::fromArray($data);
     }

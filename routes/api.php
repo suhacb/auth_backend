@@ -10,6 +10,6 @@ Route::get('/user', function (Request $request) {
 
 
 Route::prefix('auth')->name('auth.')->group(function () {
-    Route::post('login-token', [AuthController::class, 'login'])->name('login'); // Used to obtain one time login token from application
-    Route::post('/login', [AuthController::class, 'loginToken'])->name('login_token');
+    Route::post('login', [AuthController::class, 'login'])->name('login');
+    Route::post('login-token', [AuthController::class, 'loginToken'])->name('login_token'); // Used to obtain one time login token from application
 });

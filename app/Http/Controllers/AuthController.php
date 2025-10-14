@@ -9,7 +9,8 @@ use App\Http\Requests\AuthRequest;
 use App\Contracts\Auth\TokenBroker;
 use Illuminate\Http\Client\ConnectionException;
 use App\Exceptions\Auth\IdentityProviderException;
-use App\Exceptions\Auth\InvalidCredentialsException;
+use App\Exceptions\Auth\InvalidClientCredentialsException;
+use App\Exceptions\Auth\InvalidUserCredentialsException;
 
 class AuthController extends Controller
 {
@@ -19,19 +20,25 @@ class AuthController extends Controller
     {
         $username = $request->input('username');
         $password = $request->input('password');
-        // $url = config('keycloak.base_url') . '/realms/' . config('keycloak.realm') . '/protocol/openid-connect/token';
 
         try{
             $response = $this->broker->requestToken($username, $password);
             return $response->toArray();
-        } catch (InvalidCredentialsException $e) {
+        } catch (InvalidUserCredentialsException $e) {
             return response()->json(
                 [
                     'errors' => [
                         'username' => $e->getMessage(),
                         'password' => $e->getMessage(),
                     ]
-                ], $e->status);
+                ], 401);
+        } catch (InvalidClientCredentialsException $e) {
+            return response()->json(
+                [
+                    'errors' => [
+                        'error' => $e->getMessage(),
+                    ]
+                ], 500);
         } catch (IdentityProviderException $e) {
             return response()->json([
               'error_message' => $e->getMessage()  
