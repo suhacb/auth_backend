@@ -10,8 +10,6 @@ use App\Services\Auth\ApplicationService;
 
 class ApplicationsController extends Controller
 {
-    protected ApplicationService $service;
-
     public function index(): JsonResponse
     {
         // return response()->json($this->applicationService->index(), 200);
