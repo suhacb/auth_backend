@@ -5,17 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ApplicationRequest;
 use App\Services\Auth\ApplicationService;
 
 class ApplicationsController extends Controller
 {
-    // public function __construct(private ?ApplicationService $applicationService = null) {
-    //     if (!$applicationService) {
-    //         $this->applicationService = new ApplicationService();
-    //     }
-    // }
+    protected ApplicationService $service;
 
     public function index(): JsonResponse
     {
