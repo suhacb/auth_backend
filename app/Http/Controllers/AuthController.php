@@ -74,8 +74,7 @@ class AuthController extends Controller
         $loginToken = new LoginToken(
             app: $request->json('app')
         );
-        // Log::info($loginToken->loginToken->toJson());
-        // $loginToken->loginToken->save();
+
         return response()->json($loginToken->token, 200);
     }
 }

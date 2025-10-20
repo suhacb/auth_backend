@@ -36,22 +36,8 @@ class ApplicationTest extends TestCase
         $this->assertTrue(in_array('Illuminate\\Database\\Eloquent\\SoftDeletes', class_uses(Application::class)));
     }
 
-    public function test_application_model_can_create_update_and_soft_delete()
+    public function test_application_model_uses_has_factory()
     {
-        $app = Application::create([
-            'name' => 'MyApp',
-            'client_id' => 'client123',
-            'client_secret' => 'secret',
-            'grant_type' => 'password',
-            'callback_url' => 'https://myapp.com/callback',
-        ]);
-
-        $this->assertDatabaseHas('applications', ['name' => 'MyApp']);
-
-        $app->update(['name' => 'NewName']);
-        $this->assertDatabaseHas('applications', ['name' => 'NewName']);
-
-        $app->delete();
-        $this->assertSoftDeleted($app);
+        $this->assertTrue(in_array('Illuminate\Database\Eloquent\Factories\HasFactory', class_uses(Application::class)));
     }
 }

@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\Application;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,80 +39,246 @@ class ApplicationTest extends TestCase
     {
         Application::factory()->count(3)->create();
 
-        $response = $this->getJson(route('applications,index'));
+        $response = $this->getJson(route('applications.index'));
 
-        $response->assertOk()
-                 ->assertJsonCount(3, 'data');
+        $response->assertOk()->assertJsonCount(3);
     }
 
     public function test_applications_create(): void
     {
-        $payload = [
+        $payload = Application::factory()->make([
             'name' => 'Frontend App',
-            'client_id' => 'frontend-client',
-            'client_secret' => 'secret123',
-            'grant_type' => 'password',
-            'callback_url' => 'https://frontend.app/callback',
-        ];
+            'client_id' => 'frontend-client'
+        ]);
 
-        $response = $this->postJson(route('applications.store'), $payload);
+        $response = $this->postJson(route('applications.store'), $payload->getAttributes());
 
-        $response->assertCreated()
-                 ->assertJsonPath('data.name', 'Frontend App');
+        $response->assertCreated()->assertJsonPath('name', 'Frontend App');
 
         $this->assertDatabaseHas('applications', [
             'client_id' => 'frontend-client',
         ]);
     }
-
-    public function test_required_fields_on_create(): void
+    
+    public function test_validation_rules_for_name(): void
     {
+        /** STORE method */
+        // required
         $response = $this->postJson(route('applications.store'), []);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+        
+        //string
+        $response = $this->postJson(route('applications.store'), ['name' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['name' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+        
+        //unique
+        $unique_name = 'unique_application_name';
+        Application::factory()->create(['name' => $unique_name]);
 
-        $response->assertStatus(422)->assertJsonValidationErrors([
-            'name',
-            'client_id',
-            'client_secret',
-            'grant_type',
-            'url',
-            'callback_url'
-        ]);
+        $response = $this->postJson(route('applications.store'), ['name' => $unique_name]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+
+        /** UPDATE method */
+        $name = 'application_to_be_updated';
+        $application = Application::factory()->create(['name' => $name]);
+        
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['name' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['name' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+        
+        //unique
+        $unique_name = 'unique_application_name';
+
+        $response = $this->putJson(route('applications.update', $application), ['name' => $unique_name]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+    }
+
+    public function test_validation_rules_for_client_id(): void
+    {
+        /** STORE method */
+        // required
+        $response = $this->postJson(route('applications.store'), []);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_id']);
+        
+        //string
+        $response = $this->postJson(route('applications.store'), ['client_id' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_id']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['client_id' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_id']);
+
+        /** UPDATE method */
+        $application = Application::factory()->create();
+
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['client_id' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_id']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['client_id' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_id']);
+    }
+
+    public function test_validation_rules_for_client_secret(): void
+    {
+        /** STORE method */
+        // required
+        $response = $this->postJson(route('applications.store'), []);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_secret']);
+        
+        //string
+        $response = $this->postJson(route('applications.store'), ['client_secret' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_secret']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['client_secret' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_secret']);
+
+        /** UPDATE method */
+        $application = Application::factory()->create();
+
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['client_secret' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_secret']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['client_secret' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['client_secret']);
+    }
+
+    public function test_validation_rules_for_grant_type(): void
+    {
+        /** STORE method */
+        // required
+        $response = $this->postJson(route('applications.store'), []);
+        $response->assertStatus(422)->assertJsonValidationErrors(['grant_type']);
+        
+        //string
+        $response = $this->postJson(route('applications.store'), ['grant_type' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['grant_type']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['grant_type' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['grant_type']);
+
+        /** UPDATE method */
+        $application = Application::factory()->create();
+
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['grant_type' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['grant_type']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['grant_type' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['grant_type']);
+    }
+
+    public function test_validation_rules_for_url(): void
+    {
+        /** STORE method */
+        // required
+        $response = $this->postJson(route('applications.store'), []);
+        $response->assertStatus(422)->assertJsonValidationErrors(['url']);
+        
+        //string
+        $response = $this->postJson(route('applications.store'), ['url' => Str::random(50)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['url']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['url' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['url']);
+
+        /** UPDATE method */
+        $application = Application::factory()->create();
+        
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['url' => Str::random(50)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['url']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['url' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['url']);
+    }
+
+    public function test_validation_rules_for_callback_url(): void
+    {
+        /** STORE method */
+        // required
+        $response = $this->postJson(route('applications.store'), []);
+        $response->assertStatus(422)->assertJsonValidationErrors(['callback_url']);
+        
+        //string
+        $response = $this->postJson(route('applications.store'), ['callback_url' => Str::random(50)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['callback_url']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['callback_url' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['callback_url']);
+
+        /** UPDATE method */
+        $application = Application::factory()->create();
+
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['callback_url' => Str::random(50)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['callback_url']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['callback_url' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['callback_url']);
+    }
+
+    public function test_validation_rules_for_description(): void
+    {        
+        /** STORE method */
+        //string
+        $response = $this->postJson(route('applications.store'), ['description' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['description']);
+        
+        //max
+        $response = $this->postJson(route('applications.store'), ['description' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['description']);
+
+        /** UPDATE method */
+        $application = Application::factory()->create();
+        //string
+        $response = $this->putJson(route('applications.update', $application), ['description' => 12345]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['description']);
+        
+        //max
+        $response = $this->putJson(route('applications.update', $application), ['description' => Str::random(256)]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['description']);
     }
 
     public function test_application_update(): void
     {
         $app = Application::factory()->create();
 
-        $response = $this->putJson(route('applications.update', $app->id), [
+        $response = $this->putJson(route('applications.update', $app), [
             'name' => 'Updated App Name',
         ]);
 
-        $response->assertOk()
-                 ->assertJsonPath('data.name', 'Updated App Name');
+        $response->assertOk()->assertJsonPath('name', 'Updated App Name');
 
         $this->assertDatabaseHas('applications', ['name' => 'Updated App Name']);
     }
 
-    public function test_required_fields_on_update(): void
-    {
-        $app = Application::factory()->create();
-
-        $response = $this->putJson(route('applications.update', $app->id), [
-            'client_id' => '',
-        ]);
-
-        $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['client_id']);
-    }
-
     public function test_delete_application_softly(): void
     {
-        $app = Application::factory()->create();
+        $application = Application::factory()->create();
 
-        $response = $this->deleteJson(route('applications.delete', $app->id));
+        $response = $this->deleteJson(route('applications.delete', $application));
 
-        $response->assertNoContent();
+        $response->assertNoContent()->assertStatus(204);
 
-        $this->assertSoftDeleted('applications', ['id' => $app->id]);
+        $this->assertSoftDeleted('applications', ['id' => $application->id]);
     }
 }
