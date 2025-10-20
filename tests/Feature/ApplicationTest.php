@@ -281,4 +281,21 @@ class ApplicationTest extends TestCase
 
         $this->assertSoftDeleted('applications', ['id' => $application->id]);
     }
+
+    public function test_show_application(): void
+    {
+        $application = Application::factory()->create();
+
+        $response = $this->getJson(route('applications.show', $application));
+
+        $response->assertStatus(200)->assertJson([
+            'id' => $application->id,
+            'name' => $application->name,
+            'client_id' => $application->client_id,
+            'grant_type' => $application->grant_type,
+            'url' => $application->url,
+            'callback_url' => $application->callback_url,
+            'description' => $application->description,
+        ]);
+    }
 }

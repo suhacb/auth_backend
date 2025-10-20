@@ -33,4 +33,9 @@ class ApplicationsController extends Controller
         $application->delete();
         return response()->json(null, 204);
     }
+
+    public function show(Application $application): JsonResponse
+    {
+        return response()->json($application, 200);
+    }
 }
