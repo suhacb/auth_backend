@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\DynamicRequest;
 
-class AuthRequest extends FormRequest
+class AuthRequest extends DynamicRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,43 +13,6 @@ class AuthRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        // Get the controller method from the current route
-        $action = $this->route()->getActionMethod();
-
-        // Call a method dynamically based on action
-        $method = 'rulesFor' . ucfirst($action);
-
-        if (method_exists($this, $method)) {
-            return $this->$method();
-        }
-
-        // default fallback
-        return [];
-    }
-
-    public function messages(): array
-    {
-        // Get the controller method from the current route
-        $action = $this->route()->getActionMethod();
-
-        // Call a method dynamically based on action
-        $method = 'messagesFor' . ucfirst($action);
-
-        if (method_exists($this, $method)) {
-            return $this->$method();
-        }
-        
-        // default fallback
-        return [];
     }
     
     protected function rulesForLogin(): array
