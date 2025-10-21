@@ -15,11 +15,12 @@ class ApplicationsSeeder extends Seeder
     {
         Application::factory()->create([
             'name' => 'auth-frontend',
-            'client_id' => config('keycloak.client_id'),
-            'client_secret' => config('keycloak.client_secret'),
+            'realm' => config('keycloak.admin_realm'),
+            'client_id' => config('keycloak.admin_client_id'),
+            'client_secret' => null,
             'grant_type' => 'password',
-            'url' => 'http://host.docker.internal:9010',
-            'callback_url' => 'http://host.docker.internal:9010/callback',
+            'url' => 'http://host.docker.internal:9020',
+            'callback_url' => 'http://host.docker.internal:9020/callback',
             'description' => 'Authentication frontend app.'
         ]);
     }

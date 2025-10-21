@@ -19,9 +19,9 @@ return [
     'scope' => env('KEYCLOAK_SCOPE', 'openid'),
     'redirect_uri' => env('KEYCLOAK_REDIRECT_URI', 'http://localhost/callback'),
     'admin_realm' => env('KEYCLOAK_ADMIN_REALM', 'master'),
+    'admin_client_id' => env('KEYCLOAK_ADMIN_CLIENT_ID'),
     'admin_username' => env('KEYCLOAK_ADMIN_USERNAME'),
     'admin_password' => env('KEYCLOAK_ADMIN_PASSWORD'),
-    'admin_client_id' => env('KEYCLOAK_ADMIN_CLIENT_ID'),
     
     // HTTP client hardening
     'timeout'       => env('KEYCLOAK_TIMEOUT', 5), // seconds

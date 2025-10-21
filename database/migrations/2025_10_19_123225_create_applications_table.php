@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('realm');
             $table->string('client_id');
-            $table->string('client_secret');
+            $table->string('client_secret')->nullable();
             $table->string('grant_type');
             $table->string('url');
             $table->string('callback_url');
