@@ -19,8 +19,8 @@ class ApplicationsSeeder extends Seeder
             'client_id' => config('keycloak.admin_client_id'),
             'client_secret' => null,
             'grant_type' => 'password',
-            'url' => 'http://host.docker.internal:9020',
-            'callback_url' => 'http://host.docker.internal:9020/callback',
+            'url' => 'http://localhost:9020',
+            'callback_url' => 'http://localhost:9020/callback',
             'description' => 'Authentication frontend app.'
         ]);
     }

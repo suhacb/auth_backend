@@ -88,6 +88,19 @@ class AuthenticationTest extends TestCase
      */
     public function test_login_procedure(): void
     {
+        // Create a default application
+        $application = Application::factory()->create([
+            'realm' => $this->config['realm'],
+            'client_id' => $this->config['client_id'],
+            'client_secret' => $this->config['client_secret'],
+        ]);
+ 
+        // Set the default X-Application-Name header
+        $this->defaultHeaders = [
+            'X-Application-Name' => $application->name,
+            'X-Client-Url' => $application->url
+        ];
+
         // Test login using correct credentials
         $response = $this->postJson(route('auth.login'), [
             'username' => Arr::get($this->config, 'test_user.username'),

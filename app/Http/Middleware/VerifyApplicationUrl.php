@@ -54,6 +54,9 @@ class VerifyApplicationUrl
             return response()->json(['error' => 'Unauthorized application'], 403);
         }
 
+        // Store application in request for later processing in KeycloakTokenBroker
+        $request->attributes->set('application', $application);
+
         return $next($request);
     }
 }

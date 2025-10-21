@@ -45,7 +45,6 @@ class VerifyAuthApplicationTest extends TestCase
         
         // store
         $application_to_store = Application::factory()->make();
-        logger()->info($application_to_store->toJson());
         $response = $this->postJson(route('applications.store'), $application_to_store->getAttributes());
         $response->assertStatus(201);
         

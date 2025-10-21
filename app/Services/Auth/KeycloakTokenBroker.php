@@ -10,15 +10,17 @@ use App\Exceptions\Auth\IdentityProviderException;
 use App\Exceptions\Auth\InvalidClientCredentialsException;
 use App\Exceptions\Auth\InvalidCredentialsException;
 use App\Exceptions\Auth\InvalidUserCredentialsException;
+use App\Models\Application;
 
 class KeycloakTokenBroker implements TokenBroker
 {
-    public function __construct(private readonly array $config) {}
+    public function __construct(private readonly array $config, private readonly Application $application) {}
 
     protected function endpoint(string $path = 'token'): string
     {
         $base = rtrim($this->config['base_url'], '/');
-        $realm = $this->config['realm'];
+        // $realm = $this->config['realm'];
+        $realm = $this->application->realm;
         return "{$base}/realms/{$realm}/protocol/openid-connect/{$path}";
     }
 
@@ -35,10 +37,20 @@ class KeycloakTokenBroker implements TokenBroker
 
     public function requestToken(string $username, string $password): AccessToken
     {
+        // $payload = [
+        //     'grant_type'    => $this->config['grant_type'] ?? 'password',
+        //     'client_id'     => $this->config['client_id'],
+        //     'client_secret' => $this->config['client_secret'],
+        //     'username'      => $username,
+        //     'password'      => $password,
+        //     // 'scope'         => $this->config['scope']
+        //     'scope'         => 'openid profile email'
+        // ];
+
         $payload = [
-            'grant_type'    => $this->config['grant_type'] ?? 'password',
-            'client_id'     => $this->config['client_id'],
-            'client_secret' => $this->config['client_secret'],
+            'grant_type'    => $this->application->grant_type,
+            'client_id'     => $this->application->client_id,
+            'client_secret' => $this->application->client_secret,
             'username'      => $username,
             'password'      => $password,
             // 'scope'         => $this->config['scope']
@@ -96,8 +108,8 @@ class KeycloakTokenBroker implements TokenBroker
     {
         $payload = [
             'grant_type'    => 'refresh_token',
-            'client_id'     => $this->config['client_id'],
-            'client_secret' => $this->config['client_secret'],
+            'client_id'     => $this->application->client_id,
+            'client_secret' => $this->application->client_secret,
             'refresh_token' => $refreshToken,
         ];
 
