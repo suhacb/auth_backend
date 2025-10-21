@@ -22,41 +22,39 @@ class VerifyAuthApplicationUrl
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Extract application name from header
-        $appName = $request->header('X-Application-Name');
+        /**
+         * Extract application name and URL from header
+         */
+        $appName = $request->header('X-Application-Name') ?? null;
+        $appUrl = $request->header('X-Client-Url') ?? null;
 
+        /**
+         * Deny access when $appName or $appUrl is null
+         */
         if (!$appName) {
             return response()->json(['error' => 'Application name is required'], 400);
         }
-
-        // Extract application url from header
-        $appUrl = $request->header('X-Client-Url');
 
         if (!$appUrl) {
             return response()->json(['error' => 'Application URL is required'], 400);
         }
 
-        // Check if provided application name is auth-frontend
+        /**
+         * Deny access if $appName is not auth-frontend
+         */
         if ($appName !== 'auth-frontend') {
             return response()->json(['error' => 'Unauthorized application'], 403);
         }
 
-        // 3. Lookup AUTH application in DB
-        $application = Application::where('name', 'auth-frontend')->first();
+        // Lookup auth-frontend application in DB
+        $auth_frontend_application = Application::where('name', 'auth-frontend')->first();
 
-        // 3. Check if request URL matches allowed URL
-        // You can choose to compare request URL or host depending on your needs
-        // $requestUrl = $request->fullUrl(); // full URL
-
-        // Example: check if host matches
-        // $allowedHost = parse_url($application->url, PHP_URL_HOST);
-
-        if ($appUrl !== $application->url) {
+        /**
+         * Deny access if $appUrl does not match auth-frontend application URL
+         */
+        if ($appUrl !== $auth_frontend_application->url) {
             return response()->json(['error' => 'Unauthorized application'], 403);
         }
-
-        // // Optionally, you can attach the application to the request for downstream use
-        // $request->attributes->set('application', $application);
 
         return $next($request);
     }
