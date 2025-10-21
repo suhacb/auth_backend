@@ -104,7 +104,7 @@ class VerifyAuthApplicationTest extends TestCase
         $response->assertStatus(403)->assertJson(['error' => 'Unauthorized application']);
     }
 
-    public function test_deny_access_when_client_url_is_invalid()
+    public function test_deny_access_when_client_url_is_invalid(): void
     {
         // Application with provided name exists but is not auth-frontend
         $this->defaultHeaders = [

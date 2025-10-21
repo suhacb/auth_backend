@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use App\Models\Application;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,7 @@ class AuthenticationTest extends TestCase
     protected array $userCredentials;
     protected ?string $accessToken;
     protected ?string $idToken;
+    protected Application $application;
 
     protected function setUp(): void
     {
@@ -28,6 +30,15 @@ class AuthenticationTest extends TestCase
         $this->config = config('keycloak');
         $this->accessToken = null;
         $this->idToken = null;
+
+        // Create a default application
+        $this->application = Application::factory()->create();
+ 
+        // Set the default X-Application-Name header
+        $this->defaultHeaders = [
+            'X-Application-Name' => $this->application->name,
+            'X-Client-Url' => $this->application->url
+        ];
     }
 
     /**

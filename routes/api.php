@@ -10,7 +10,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:api');
 
 
-Route::prefix('auth')->name('auth.')->group(function () {
+Route::prefix('auth')->name('auth.')->middleware('verify.application')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('login-token', [AuthController::class, 'loginToken'])->name('login_token'); // Used to obtain one time login token from application
 });

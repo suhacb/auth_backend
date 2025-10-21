@@ -22,34 +22,37 @@ class VerifyApplicationUrl
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Extract application name from header, query, or body
-        $appName = $request->header('X-Application-Name') ?? $request->query('application');
+        /**
+         * Extract application name and URL from header
+         */
+        $appName = $request->header('X-Application-Name') ?? null;
+        $appUrl = $request->header('X-Client-Url') ?? null;
 
+        /**
+         * Deny access when $appName or $appUrl is null
+         */
         if (!$appName) {
             return response()->json(['error' => 'Application name is required'], 400);
         }
 
-        // 2. Lookup application in DB
-        $application = Application::where('name', $appName)->first();
+        if (!$appUrl) {
+            return response()->json(['error' => 'Application URL is required'], 400);
+        }
 
+        /**
+         * Deny access if $appName is not a registered application
+         */
+        $application = Application::where(['name' => $appName])->first();
         if (!$application) {
-            return response()->json(['error' => 'Invalid application'], 403);
+            return response()->json(['error' => 'Unauthorized application'], 403);
         }
 
-        // 3. Check if request URL matches allowed URL
-        // You can choose to compare request URL or host depending on your needs
-        // $requestUrl = $request->fullUrl(); // full URL
-        $requestHost = $request->header('X-Client-Url'); // just the host
-
-        // Example: check if host matches
-        // $allowedHost = parse_url($application->url, PHP_URL_HOST);
-
-        if ($requestHost !== $application->url) {
-            return response()->json(['error' => 'Unauthorized URL'], 403);
+        /**
+         * Deny access if $appUrl does not match the registered application's URL
+         */
+        if ($appUrl !== $application->url) {
+            return response()->json(['error' => 'Unauthorized application'], 403);
         }
-
-        // // Optionally, you can attach the application to the request for downstream use
-        // $request->attributes->set('application', $application);
 
         return $next($request);
     }
