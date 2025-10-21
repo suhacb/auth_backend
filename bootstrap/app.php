@@ -13,10 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Global middleware
-        $middleware->append(VerifyApplicationUrl::class);
-        
-        // Middleware aliases
+         // Only register as an alias, not globally
         $middleware->alias([
             'verify.application' => VerifyApplicationUrl::class,
         ]);
