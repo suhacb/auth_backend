@@ -15,7 +15,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('login-token', [AuthController::class, 'loginToken'])->name('login_token'); // Used to obtain one time login token from application
 });
 
-Route::prefix('applications')->name('applications.')->group(function () {
+Route::prefix('applications')->name('applications.')->middleware('verify.application')->group(function () {
     Route::get('', [ApplicationsController::class, 'index'])->name('index');
     Route::get('{application}', [ApplicationsController::class, 'show'])->name('show');
     Route::post('', [ApplicationsController::class, 'store'])->name('store');
