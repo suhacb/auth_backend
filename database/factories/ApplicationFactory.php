@@ -16,8 +16,11 @@ class ApplicationFactory extends Factory
      */
     public function definition(): array
     {
+        $realms = ['master', 'nutrients'];
+
         return [
             'name' => $this->faker->regexify('[a-z0-9]{8,16}'),
+            'realm' => $this->faker->randomElement($realms),
             'client_id' => $this->faker->regexify('[a-z0-9]{8,16}') . '_client',
             'client_secret' => $this->faker->regexify('[A-Za-z0-9]{16}'),
             'grant_type' => 'password',

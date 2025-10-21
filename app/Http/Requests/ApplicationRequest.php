@@ -24,6 +24,7 @@ class ApplicationRequest extends DynamicRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:applications,name'],
+            'realm' => ['required', 'string', 'max:255'],
             'client_id' => ['required', 'string', 'max:255'],
             'client_secret' => ['required', 'string', 'max:255'],
             'grant_type' => ['required', 'string', 'max:255'],
@@ -40,6 +41,10 @@ class ApplicationRequest extends DynamicRequest
             'name.string' => 'The application name must be a valid string.',
             'name.max' => 'The application name may not be greater than 255 characters.',
             'name.unique' => 'An application with this name already exists.',
+
+            'realm.required' => 'The realm is required.',
+            'realm.string' => 'The realm must be a valid string.',
+            'realm.max' => 'The realm may not be greater than 255 characters.',
 
             'client_id.required' => 'The client ID is required.',
             'client_id.string' => 'The client ID must be a valid string.',
@@ -77,6 +82,7 @@ class ApplicationRequest extends DynamicRequest
                 'max:255',
                 Rule::unique('applications', 'name')->ignore($applicationId),
             ],
+            'realm' => ['sometimes', 'string', 'max:255'],
             'client_id' => ['sometimes', 'string', 'max:255'],
             'client_secret' => ['sometimes', 'string', 'max:255'],
             'grant_type' => ['sometimes', 'string', 'max:255'],
@@ -92,6 +98,9 @@ class ApplicationRequest extends DynamicRequest
             'name.string' => 'The application name must be a valid string.',
             'name.max' => 'The application name may not be greater than 255 characters.',
             'name.unique' => 'An application with this name already exists.',
+
+            'realm.string' => 'The realm must be a valid string.',
+            'realm.max' => 'The realm may not be greater than 255 characters.',
 
             'client_id.string' => 'The client ID must be a valid string.',
             'client_id.max' => 'The client ID may not be greater than 255 characters.',

@@ -16,6 +16,7 @@ class ApplicationTest extends TestCase
 
         $this->assertEqualsCanonicalizing([
             'name',
+            'realm',
             'client_id',
             'client_secret',
             'grant_type',

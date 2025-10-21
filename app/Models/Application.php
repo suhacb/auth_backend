@@ -12,6 +12,7 @@ class Application extends Model
 
     protected $fillable = [
         'name',
+        'realm',
         'client_id',
         'client_secret',
         'grant_type',

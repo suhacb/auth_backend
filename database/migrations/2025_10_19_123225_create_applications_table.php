@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->string('realm');
             $table->string('client_id');
             $table->string('client_secret');
             $table->string('grant_type');
