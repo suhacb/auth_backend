@@ -26,17 +26,8 @@ class AuthenticationTest extends TestCase
     {
         parent::setUp();
         $this->config = config('keycloak');
-
-        // $adminResponse = Http::asForm()->post('http://host.docker.internal:7080/realms/master/protocol/openid-connect/token', [
-        //     'grant_type' => 'password',
-        //     'client_id' => $this->config['admin_client_id'],
-        //     'username' => $this->config['admin_username'],
-        //     'password' => $this->config['admin_password'],
-        // ]);
-// 
         $this->accessToken = null;
         $this->idToken = null;
-        // $this->adminToken = $adminResponse->json('access_token');
     }
 
     /**

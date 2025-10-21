@@ -22,8 +22,8 @@ class ApplicationTest extends TestCase
 
      // Create a default application
      $this->application = Application::factory()->create([
-         'name' => 'MyApp',
-         'url' => 'https://allowed.example.com',
+         'name' => 'auth-frontend',
+         'url' => 'https://auth-frontend.example.com',
      ]);
  
         // Set the default X-Application-Name header

@@ -7,12 +7,12 @@ use App\Models\Application;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class VerifyApplicationUrl
+class VerifyAuthApplicationUrl
 {
     /**
      * This middleware is a route guard to protect the routes
      * which are only allowed to be accessible by the
-     * registered applications, typically backends.
+     * dedicated Auth frontend.
      */
 
     /**
@@ -29,8 +29,8 @@ class VerifyApplicationUrl
             return response()->json(['error' => 'Application name is required'], 400);
         }
 
-        // 2. Lookup application in DB
-        $application = Application::where('name', $appName)->first();
+        // 2. Lookup AUTH application in DB
+        $application = Application::where('name', 'auth-frontend')->first();
 
         if (!$application) {
             return response()->json(['error' => 'Invalid application'], 403);
