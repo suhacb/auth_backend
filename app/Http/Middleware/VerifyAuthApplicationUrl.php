@@ -22,30 +22,37 @@ class VerifyAuthApplicationUrl
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Extract application name from header, query, or body
-        $appName = $request->header('X-Application-Name') ?? $request->query('application');
+        // Extract application name from header
+        $appName = $request->header('X-Application-Name');
 
         if (!$appName) {
             return response()->json(['error' => 'Application name is required'], 400);
         }
 
-        // 2. Lookup AUTH application in DB
-        $application = Application::where('name', 'auth-frontend')->first();
+        // Extract application url from header
+        $appUrl = $request->header('X-Client-Url');
 
-        if (!$application) {
-            return response()->json(['error' => 'Invalid application'], 403);
+        if (!$appUrl) {
+            return response()->json(['error' => 'Application URL is required'], 400);
         }
+
+        // Check if provided application name is auth-frontend
+        if ($appName !== 'auth-frontend') {
+            return response()->json(['error' => 'Unauthorized application'], 403);
+        }
+
+        // 3. Lookup AUTH application in DB
+        $application = Application::where('name', 'auth-frontend')->first();
 
         // 3. Check if request URL matches allowed URL
         // You can choose to compare request URL or host depending on your needs
         // $requestUrl = $request->fullUrl(); // full URL
-        $requestHost = $request->header('X-Client-Url'); // just the host
 
         // Example: check if host matches
         // $allowedHost = parse_url($application->url, PHP_URL_HOST);
 
-        if ($requestHost !== $application->url) {
-            return response()->json(['error' => 'Unauthorized URL'], 403);
+        if ($appUrl !== $application->url) {
+            return response()->json(['error' => 'Unauthorized application'], 403);
         }
 
         // // Optionally, you can attach the application to the request for downstream use

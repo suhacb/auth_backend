@@ -14,7 +14,7 @@ class ApplicationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $application; 
+    protected Application $application; 
     
     protected function setUp(): void
     {
