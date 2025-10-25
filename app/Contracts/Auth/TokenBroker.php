@@ -20,4 +20,13 @@ interface TokenBroker
      * @throws IdentityProviderException
      */
     public function refreshToken(string $refreshToken): AccessToken;
+
+    /**
+     * Validate an access token via Keycloak introspection.
+     *
+     * @param string $accessToken The raw access token (without "Bearer ")
+     * @return bool True if token is active, false if invalid
+     * @throws IdentityProviderException on HTTP errors
+     */
+    public function validateAccessToken(string $accessToken): bool;
 }

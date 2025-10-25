@@ -106,4 +106,35 @@ class KeycloakTokenBroker implements TokenBroker
 
         return AccessToken::fromArray($data);
     }
+
+    /**
+     * Validate an access token via Keycloak introspection.
+     *
+     * @param string $accessToken The raw access token (without "Bearer ")
+     * @return bool True if token is active, false if invalid
+     * @throws IdentityProviderException on HTTP errors
+     */
+    public function validateAccessToken(string $accessToken): bool
+    {
+        $response = $this->client()->post(
+            $this->endpoint('token/introspect'),
+            [
+                'client_id' => $this->application->client_id,
+                'client_secret' => $this->application->client_secret,
+                'token' => $accessToken,
+            ]
+        );
+
+        if ($response->failed()) {
+            throw new IdentityProviderException(
+                "Keycloak token introspection failed with status {$response->status()}.",
+                status: $response->status(),
+                payload: $response->json()
+            );
+        }
+
+        $data = $response->json();
+
+        return isset($data['active']) && $data['active'] === true;
+    }
 }
