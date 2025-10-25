@@ -137,4 +137,34 @@ class KeycloakTokenBroker implements TokenBroker
 
         return isset($data['active']) && $data['active'] === true;
     }
+
+    public function revokeToken(string $accessToken): void
+    {
+        $response = $this->client()->post($this->endpoint('revoke'), [
+            'client_id'     => $this->application->client_id,
+            'client_secret' => $this->application->client_secret,
+            'token'         => $accessToken,
+            'token_type_hint' => 'access_token',
+        ]);
+
+        $body = $response->json();
+
+        if ($response->ok() && empty($body)) {
+            // Token successfully revoked
+            return;
+        }
+
+        if (isset($body['error']) && $body['error'] === 'invalid_token') {
+            throw new InvalidUserCredentialsException('Invalid access token.');
+        }
+
+        // Throw for other unexpected responses
+        if ($response->failed()) {
+            throw new IdentityProviderException(
+                "Keycloak revoke token failed with status {$response->status()}.",
+                status: $response->status(),
+                payload: $body
+            );
+        }
+    }
 }

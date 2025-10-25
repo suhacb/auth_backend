@@ -29,4 +29,14 @@ interface TokenBroker
      * @throws IdentityProviderException on HTTP errors
      */
     public function validateAccessToken(string $accessToken): bool;
+
+    /**
+     * Revoke a given access token via Keycloak.
+     *
+     * @param string $accessToken The raw access token (without "Bearer ")
+     * @return void
+     * @throws IdentityProviderException on HTTP errors
+     * @throws InvalidUserCredentialsException if the token is invalid
+     */
+    public function revokeToken(string $accessToken): void;
 }

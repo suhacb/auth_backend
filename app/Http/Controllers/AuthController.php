@@ -98,26 +98,13 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $application = $request->attributes->get('application');
-        $url = config('keycloak.base_url') . '/realms/' . $application->realm . '/protocol/openid-connect/revoke';
-
-        $response = Http::asForm()->post($url, [
-            'client_id' => $application->client_id,
-            'client_secret' => $application->client_secret,
-            'token' => $token,
-            'token_type_hint' => 'access_token'
-        ]);
-
-        $body = $response->json();
-        if ($response->ok() && empty($body)) {
+        try {
+            $this->broker->revokeToken($token);
             return response()->json(['message' => 'Logged out successfully'], 200);
-        }
-
-        if (isset($body['error']) && $body['error'] === 'invalid_token') {
+        } catch (InvalidUserCredentialsException $e) {
             return response()->json(['error' => 'Unauthorized'], 401);
+        } catch (IdentityProviderException $e) {
+            return response()->json($e->getMessage() ?? ['error' => 'Server error'], $e->getCode() ?: 500);
         }
-
-        // Other errors
-        return response()->json($response->json(), $response->status());
     }
 }
