@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
 use App\Contracts\Auth\TokenBroker;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
 use App\Exceptions\Auth\IdentityProviderException;
 use App\Exceptions\Auth\InvalidUserCredentialsException;
@@ -76,5 +77,34 @@ class AuthController extends Controller
         );
 
         return response()->json($loginToken->token, 200);
+    }
+
+    public function validateAccessToken(Request $request): JsonResponse
+    {
+        $token = $request->header('Authorization');
+        $application = $request->attributes->get('application');
+        $base_url = config('keycloak.base_url');
+        $url = $base_url . '/realms/' . $application->realm . '/protocol/openid-connect/token/introspect';
+
+        if (!$token || !str_starts_with($token, 'Bearer ')) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if (!$application) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $response = Http::asForm()->post($url, [
+            'client_id' => $application->client_id,
+            'client_secret' => $application->client_secret,
+            'token' => substr($token, 7) // remove "Bearer "
+        ]);
+
+        if ($response->json('active') === true) {
+            return response()->json($response->json('active'), $response->status());
+        }
+
+        return response()->json($response->body(), 401);
+
     }
 }

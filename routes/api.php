@@ -8,7 +8,7 @@ use App\Http\Controllers\AuthController;
 Route::prefix('auth')->name('auth.')->middleware('verify.application')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('login-token', [AuthController::class, 'loginToken'])->name('login_token'); // Used to obtain one time login token from application
-    Route::get('validate-access-token', [ApplicationsController::class, 'verifyAccessToken'])->name('validate-access-token');
+    Route::get('validate-access-token', [AuthController::class, 'validateAccessToken'])->name('validate-access-token');
 });
 
 Route::prefix('applications')->name('applications.')->middleware('verify.auth.application')->group(function () {

@@ -34,7 +34,7 @@ class ValidateAccessTokenTest extends TestCase
         $response = $this->getJson(route('auth.validate-access-token'));
 
         $response->assertStatus(401);
-        $response->assertJson(['message' => 'Unauthorized']);
+        $response->assertJson(['error' => 'Unauthorized']);
     }
 
     public function test_returns_success_if_token_is_present()
