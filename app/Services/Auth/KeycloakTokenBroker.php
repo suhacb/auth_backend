@@ -19,7 +19,6 @@ class KeycloakTokenBroker implements TokenBroker
     protected function endpoint(string $path = 'token'): string
     {
         $base = rtrim($this->config['base_url'], '/');
-        // $realm = $this->config['realm'];
         $realm = $this->application->realm;
         return "{$base}/realms/{$realm}/protocol/openid-connect/{$path}";
     }
@@ -37,23 +36,12 @@ class KeycloakTokenBroker implements TokenBroker
 
     public function requestToken(string $username, string $password): AccessToken
     {
-        // $payload = [
-        //     'grant_type'    => $this->config['grant_type'] ?? 'password',
-        //     'client_id'     => $this->config['client_id'],
-        //     'client_secret' => $this->config['client_secret'],
-        //     'username'      => $username,
-        //     'password'      => $password,
-        //     // 'scope'         => $this->config['scope']
-        //     'scope'         => 'openid profile email'
-        // ];
-
         $payload = [
             'grant_type'    => $this->application->grant_type,
             'client_id'     => $this->application->client_id,
             'client_secret' => $this->application->client_secret,
             'username'      => $username,
             'password'      => $password,
-            // 'scope'         => $this->config['scope']
             'scope'         => 'openid profile email'
         ];
 
@@ -88,18 +76,6 @@ class KeycloakTokenBroker implements TokenBroker
         }
 
         $data = $response->json();
-
-        // Keycloak sometimes returns 200 with an error body
-        // if (is_array($data) && array_key_exists('error', $data)) {
-        //     $error = $data['error'];
-        //     $desc  = $data['error_description'] ?? $error;
-// 
-        //     if ($error === 'invalid_grant') {
-        //         throw new InvalidCredentialsException($desc);
-        //     }
-// 
-        //     throw new IdentityProviderException($desc, status: 502, payload: $data);
-        // }
 
         return AccessToken::fromArray($data);
     }

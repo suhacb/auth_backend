@@ -105,6 +105,5 @@ class AuthController extends Controller
         }
 
         return response()->json($response->body(), 401);
-
     }
 }

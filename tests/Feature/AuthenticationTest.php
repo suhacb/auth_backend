@@ -101,10 +101,12 @@ class AuthenticationTest extends TestCase
             'X-Client-Url' => $application->url
         ];
 
+        logger()->info(Arr::get($this->config, 'testuser.username'));
+        logger()->info(Arr::get($this->config, 'testuser.password'));
         // Test login using correct credentials
         $response = $this->postJson(route('auth.login'), [
-            'username' => Arr::get($this->config, 'test_user.username'),
-            'password' => Arr::get($this->config, 'test_user.password')
+            'username' => Arr::get($this->config, 'testuser.username'),
+            'password' => Arr::get($this->config, 'testuser.password')
         ]);
         $response->assertStatus(200, 'Expected HTTP 200 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([

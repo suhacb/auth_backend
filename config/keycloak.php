@@ -22,6 +22,10 @@ return [
     'admin_client_id' => env('KEYCLOAK_ADMIN_CLIENT_ID'),
     'admin_username' => env('KEYCLOAK_ADMIN_USERNAME'),
     'admin_password' => env('KEYCLOAK_ADMIN_PASSWORD'),
+    'testuser' => [
+        'username' => env('KEYCLOAK_TEST_USER_USERNAME'),
+        'password' => env('KEYCLOAK_TEST_USER_PASSWORD'),
+    ],
     
     // HTTP client hardening
     'timeout'       => env('KEYCLOAK_TIMEOUT', 5), // seconds
