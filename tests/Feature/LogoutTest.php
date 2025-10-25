@@ -21,6 +21,7 @@ class LogoutTest extends TestCase
 
         // Set application
         $this->application = Application::factory()->create([
+            'name' => 'auth-frontend',
             'realm' => $this->config['realm'],
             'client_id' => $this->config['client_id'],
             'client_secret' => $this->config['client_secret'],
@@ -47,8 +48,7 @@ class LogoutTest extends TestCase
     {
         $invalidToken = 'invalidtoken123';
 
-        $response = $this->withToken($invalidToken)->postJson('auth.logout', []);
-
+        $response = $this->withToken($invalidToken)->postJson(route('auth.logout'), []);
         $response->assertStatus(401);
         $response->assertJson([
              'error' => 'Unauthorized',
@@ -73,7 +73,7 @@ class LogoutTest extends TestCase
         $response->assertExactJson(['message' => 'Logged out successfully']);
 
         // Check that revoked token is invalid in keycloak
-        $response->withToken($accessToken)->getJson(route('auth.validate-access-token'), []);
+        $response = $this->withToken($accessToken)->getJson(route('auth.validate-access-token'), []);
         $response->assertStatus(401);
     }
 }
