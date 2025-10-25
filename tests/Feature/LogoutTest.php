@@ -73,7 +73,7 @@ class LogoutTest extends TestCase
         $response->assertExactJson(['message' => 'Logged out successfully']);
 
         // Check that revoked token is invalid in keycloak
-        $response->withToken($accessToken)->postJson(route('auth.validate-access-token'), []);
+        $response->withToken($accessToken)->getJson(route('auth.validate-access-token'), []);
         $response->assertStatus(401);
     }
 }
