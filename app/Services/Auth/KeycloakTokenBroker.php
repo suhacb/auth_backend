@@ -82,14 +82,12 @@ class KeycloakTokenBroker implements TokenBroker
 
     public function refreshToken(string $refreshToken): AccessToken
     {
-        $payload = [
+        $response = $this->client()->post($this->endpoint('token'), [
             'grant_type'    => 'refresh_token',
             'client_id'     => $this->application->client_id,
             'client_secret' => $this->application->client_secret,
             'refresh_token' => $refreshToken,
-        ];
-
-        $response = $this->client()->post($this->endpoint('token'), $payload);
+        ]);
 
         if ($response->failed()) {
             throw new IdentityProviderException(
@@ -100,8 +98,13 @@ class KeycloakTokenBroker implements TokenBroker
         }
 
         $data = $response->json();
-        if (isset($data['error'])) {
-            throw new IdentityProviderException($data['error_description'] ?? $data['error'], 502, $data);
+
+        if (!empty($data['error'])) {
+            throw new IdentityProviderException(
+                $data['error_description'] ?? $data['error'],
+                502,
+                $data
+            );
         }
 
         return AccessToken::fromArray($data);
@@ -116,14 +119,11 @@ class KeycloakTokenBroker implements TokenBroker
      */
     public function validateAccessToken(string $accessToken): bool
     {
-        $response = $this->client()->post(
-            $this->endpoint('token/introspect'),
-            [
-                'client_id' => $this->application->client_id,
-                'client_secret' => $this->application->client_secret,
-                'token' => $accessToken,
-            ]
-        );
+        $response = $this->client()->post($this->endpoint('token/introspect'), [
+            'client_id'     => $this->application->client_id,
+            'client_secret' => $this->application->client_secret,
+            'token'         => $accessToken,
+        ]);
 
         if ($response->failed()) {
             throw new IdentityProviderException(
@@ -134,8 +134,40 @@ class KeycloakTokenBroker implements TokenBroker
         }
 
         $data = $response->json();
+        return !empty($data['active']);
+    }
 
-        return isset($data['active']) && $data['active'] === true;
+    /**
+     * Validate an access token and refresh it if necessary.
+     *
+     * Attempts to validate the provided access token. If invalid or expired,
+     * and a refresh token is available, it will try to refresh the access token.
+     *
+     * @param string $accessToken  Current access token
+     * @param string|null $refreshToken Optional refresh token
+     * @return bool|AccessToken  True if valid, refreshed AccessToken if renewed, or false on failure
+     * @throws IdentityProviderException on HTTP errors
+     */
+    public function validateOrRefresh(string $accessToken, ?string $refreshToken = null): bool|AccessToken
+    {
+        try {
+            if ($this->validateAccessToken($accessToken)) {
+                return true;
+            }
+        } catch (IdentityProviderException $e) {
+            // continue to refresh if refresh token is available
+        }
+
+        if ($refreshToken) {
+            try {
+                $newAccessToken = $this->refreshToken($refreshToken);
+                return $newAccessToken;
+            } catch (IdentityProviderException $e) {
+                throw $e;
+            }
+        }
+
+        return false;
     }
 
     public function revokeToken(string $accessToken): void
@@ -166,5 +198,31 @@ class KeycloakTokenBroker implements TokenBroker
                 payload: $body
             );
         }
+    }
+
+    private function checkAccessToken(string $accessToken): bool
+    {
+        $response = $this->client()->post(
+            $this->endpoint('token/introspect'),
+            [
+                'client_id' => $this->application->client_id,
+                'client_secret' => $this->application->client_secret,
+                'token' => $accessToken,
+            ]
+        );
+
+        if ($response->failed()) {
+            throw new IdentityProviderException(
+                "Keycloak token introspection failed with status {$response->status()}.",
+                status: $response->status(),
+                payload: $response->json()
+            );
+        }
+
+        $data = $response->json();
+        if (isset($data['active']) && $data['active'] === true) {
+            return true;
+        }
+        return false;
     }
 }

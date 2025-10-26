@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Classes\Auth\LoginToken;
+use App\Classes\Auth\AccessToken;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
 use App\Contracts\Auth\TokenBroker;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
 use App\Exceptions\Auth\IdentityProviderException;
@@ -81,14 +81,28 @@ class AuthController extends Controller
 
     public function validateAccessToken(Request $request): JsonResponse
     {
-        $token = $request->bearerToken();
-        if (!$token || !$this->broker->validateAccessToken($token)) {
+        $accessToken = $request->bearerToken();
+        $refreshToken = $request->header('X-Refresh-Token');
+
+        if (!$accessToken) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return response()->json([
-            'active' => true
-        ], 200);
+        try {
+            $result = $this->broker->validateOrRefresh($accessToken, $refreshToken);
+        } catch (IdentityProviderException $e) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($result === true) {
+            return response()->json(['active' => true], 200);
+        }
+
+        if ($result instanceof AccessToken) {
+            return response()->json($result->toArray(), 200);
+        }
+
+        return response()->json(['error' => 'Unauthorized'], 401);
     }
 
     public function logout(Request $request): JsonResponse
