@@ -27,7 +27,7 @@ class ApplicationRequest extends DynamicRequest
             'realm' => ['required', 'string', 'max:255'],
             'client_id' => ['required', 'string', 'max:255'],
             'client_secret' => ['required', 'string', 'max:255'],
-            'grant_type' => ['required', 'string', 'max:255'],
+            'grant_type' => ['required', 'string', 'max:255', 'in:password,authorization_code,client_credentials,refresh_token,device_code'],
             'url' => ['required', 'url', 'max:255'],
             'callback_url' => ['required', 'url', 'max:255'],
             'description' => ['sometimes', 'string', 'max:255'],
@@ -57,6 +57,7 @@ class ApplicationRequest extends DynamicRequest
             'grant_type.required' => 'The grant type is required.',
             'grant_type.string' => 'The grant type must be a valid string.',
             'grant_type.max' => 'The grant type may not be greater than 255 characters.',
+            'grant_type.in' => 'The selected grant type is invalid. Allowed values are: password, authorization_code, client_credentials, refresh_token, device_code.',
 
             'url.required' => 'The application URL is required.',
             'url.url' => 'The application URL must be a valid URL.',
@@ -85,7 +86,7 @@ class ApplicationRequest extends DynamicRequest
             'realm' => ['sometimes', 'string', 'max:255'],
             'client_id' => ['sometimes', 'string', 'max:255'],
             'client_secret' => ['sometimes', 'string', 'max:255'],
-            'grant_type' => ['sometimes', 'string', 'max:255'],
+            'grant_type' => ['sometimes', 'string', 'max:255', 'in:password,authorization_code,client_credentials,refresh_token,device_code'],
             'url' => ['sometimes', 'url', 'max:255'],
             'callback_url' => ['sometimes', 'url', 'max:255'],
             'description' => ['sometimes', 'string', 'max:255'],
@@ -110,6 +111,7 @@ class ApplicationRequest extends DynamicRequest
 
             'grant_type.string' => 'The grant type must be a valid string.',
             'grant_type.max' => 'The grant type may not be greater than 255 characters.',
+            'grant_type.in' => 'The selected grant type is invalid. Allowed values are: password, authorization_code, client_credentials, refresh_token, device_code.',
 
             'url.url' => 'The application URL must be a valid URL.',
             'url.max' => 'The application URL may not be greater than 255 characters.',
