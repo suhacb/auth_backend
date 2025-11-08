@@ -95,7 +95,8 @@ class AuthController extends Controller
         }
 
         if ($result === true) {
-            return response()->json(['active' => true], 200);
+            // return response()->json(['active' => true], 200);
+            return response()->json(true, 200);
         }
 
         if ($result instanceof AccessToken) {

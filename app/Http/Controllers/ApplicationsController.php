@@ -18,7 +18,6 @@ class ApplicationsController extends Controller
 
     public function store(ApplicationRequest $request): JsonResponse
     {
-        // return response()->json($this->applicationService->store($request->validated()), 201);
         return response()->json(Application::create($request->validated()), 201);
     }
 
