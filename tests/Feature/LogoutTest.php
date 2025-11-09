@@ -25,6 +25,7 @@ class LogoutTest extends TestCase
             'realm' => $this->config['realm'],
             'client_id' => $this->config['client_id'],
             'client_secret' => $this->config['client_secret'],
+            'grant_type' => 'password'
         ]);
  
         // Set the default X-Application-Name header

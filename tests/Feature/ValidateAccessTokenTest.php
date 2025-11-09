@@ -30,7 +30,8 @@ class ValidateAccessTokenTest extends TestCase
             'url' => 'http://localhost:9020',
             'client_id' => config('keycloak.client_id'),
             'client_secret' => config('keycloak.client_secret'),
-            'realm' => config('keycloak.realm')
+            'realm' => config('keycloak.realm'),
+            'grant_type' => 'password'
         ]);
  
         // Set the default X-Application-Name header
