@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\VerifyApplicationUrl;
+use App\Http\Middleware\VerifyAuthApplicationUrl;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -12,7 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+         // Only register as an alias, not globally
+        $middleware->alias([
+            'verify.application' => VerifyApplicationUrl::class,
+            'verify.auth.application' => VerifyAuthApplicationUrl::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

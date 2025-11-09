@@ -4,7 +4,7 @@ namespace App\Exceptions\Auth;
 
 use RuntimeException;
 
-class InvalidCredentialsException extends RuntimeException
+class InvalidUserCredentialsException extends RuntimeException
 {
     public function __construct(
         string $message = 'Invalid user credentials.',

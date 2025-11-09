@@ -18,6 +18,14 @@ return [
     'client_secret' => env('KEYCLOAK_CLIENT_SECRET', 'mysecret'),
     'scope' => env('KEYCLOAK_SCOPE', 'openid'),
     'redirect_uri' => env('KEYCLOAK_REDIRECT_URI', 'http://localhost/callback'),
+    'admin_realm' => env('KEYCLOAK_ADMIN_REALM', 'master'),
+    'admin_client_id' => env('KEYCLOAK_ADMIN_CLIENT_ID'),
+    'admin_username' => env('KEYCLOAK_ADMIN_USERNAME'),
+    'admin_password' => env('KEYCLOAK_ADMIN_PASSWORD'),
+    'testuser' => [
+        'username' => env('KEYCLOAK_TEST_USER_USERNAME'),
+        'password' => env('KEYCLOAK_TEST_USER_PASSWORD'),
+    ],
     
     // HTTP client hardening
     'timeout'       => env('KEYCLOAK_TIMEOUT', 5), // seconds
@@ -25,4 +33,10 @@ return [
         'times' => (int) env('KEYCLOAK_HTTP_RETRY_TIMES', 1),
         'sleep' => (int) env('KEYCLOAK_HTTP_RETRY_SLEEP', 100), // ms
     ],
+
+    // Test user
+    'test_user' => [
+        'username' => env('KEYCLOAK_TEST_USER_USERNAME'),
+        'password' => env('KEYCLOAK_TEST_USER_PASSWORD')
+    ]
 ];
