@@ -17,7 +17,7 @@ class ApplicationsSeeder extends Seeder
             'name' => 'auth-frontend',
             'realm' => config('keycloak.admin_realm'),
             'client_id' => config('keycloak.admin_client_id'),
-            'client_secret' => null,
+            'client_secret' => config('keycloak.client_secret'),
             'grant_type' => 'password',
             'url' => 'http://localhost:9020',
             'callback_url' => 'http://localhost:9020/callback',

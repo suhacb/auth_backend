@@ -54,7 +54,7 @@ class KeycloakTokenBroker implements TokenBroker
 
         // Wrong client_id or client_secret
         if ($response->status() === 401 && in_array($response->json('error'), ['invalid_client', 'unauthorized_client'], true)) {
-            throw new InvalidClientCredentialsException($response->json('error_description') ?? 'Invalid client or Invalid client credentials.');
+            throw new InvalidClientCredentialsException($response->json('error_description') ?? 'Invalid client or invalid client credentials.');
         }
 
         // Wrong username or password
@@ -64,7 +64,7 @@ class KeycloakTokenBroker implements TokenBroker
 
         // Handle most common invalid creds signaling
         if ($response->status() === 400) {
-            throw new InvalidClientCredentialsException($response->json());
+            throw new InvalidClientCredentialsException(json_encode($response->json()));
         }
 
         if ($response->failed()) {

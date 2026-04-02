@@ -16,7 +16,7 @@ class ApplicationFactory extends Factory
      */
     public function definition(): array
     {
-        $realms = ['master', 'nutrients'];
+        $realms = ['master', 'nutrients', 'auth'];
         $grantTypes = ['authorization_code', 'client_credentials', 'refresh_token', 'device_code'];
 
         return [

@@ -32,7 +32,10 @@ class AuthenticationTest extends TestCase
         $this->idToken = null;
 
         // Create a default application
-        $this->application = Application::factory()->create();
+        $this->application = Application::factory()->create([
+            'realm' => 'auth',
+            'grant_type' => 'password'
+        ]);
  
         // Set the default X-Application-Name header
         $this->defaultHeaders = [
@@ -148,21 +151,26 @@ class AuthenticationTest extends TestCase
         ]);
         $response->assertStatus(500, 'Expected HTTP 500 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
-            'errors',
+            'errors' => [
+                'error'
+            ],
         ]);
+        $response->assertJsonPath('errors.error', 'Invalid client or Invalid client credentials');
     }
 
     // Test login using incorrect client_secret
     public function test_login_using_incorrect_client_secret(): void
     {
-        Config::set('keycloak.client_id', 'wrong_client_secret');
+        Config::set('keycloak.client_secret', 'wrong_client_secret');
         $response = $this->postJson(route('auth.login'), [
             'username' => Arr::get($this->config, 'test_user.username'),
             'password' => Arr::get($this->config, 'test_user.password')
         ]);
         $response->assertStatus(500, 'Expected HTTP 500 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
-            'errors',
+            'errors' => [
+                'error'
+            ],
         ]);
     }
 
@@ -176,7 +184,9 @@ class AuthenticationTest extends TestCase
         ]);
         $response->assertStatus(500, 'Expected HTTP 500 for validation error, but received ' . $response->status() . '.');
         $response->assertJsonStructure([
-            'errors',
+            'errors' => [
+                'error'
+            ],
         ]);
     }
 
