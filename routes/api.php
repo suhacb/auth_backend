@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\ApplicationsController;
+use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+
+Route::get('health', [HealthController::class, 'check'])->name('health');
 
 Route::prefix('auth')->name('auth.')->middleware('verify.application')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
